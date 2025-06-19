@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNBP Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .result-value {
+            color: #333;
+            font-size: 16px;
+            word-break: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .status-0 {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-1 {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-2 {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .error.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SNBP Checker</h1>
+        
+        <form id="snbpForm">
+            <div class="form-group">
+                <label for="nisn">NISN</label>
+                <input type="text" id="nisn" name="nisn" placeholder="Masukkan NISN" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="npsn">NPSN</label>
+                <input type="text" id="npsn" name="npsn" placeholder="Masukkan NPSN" required>
+            </div>
+            
+            <button type="submit" id="submitBtn">Cek Data</button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Mengambil data...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result-container" id="results">
+            <div class="result-item">
+                <div class="result-label">Nama:</div>
+                <div class="result-value" id="nama">-</div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">Status:</div>
+                <div class="result-value">
+                    <span class="status-badge" id="status">-</span>
+                </div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">Keterangan:</div>
+                <div class="result-value" id="keterangan">-</div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">Kelayakan Test Mandiri:</div>
+                <div class="result-value" id="eligibility" style="font-weight: 600;">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('snbpForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear previous results and errors
+            error.classList.remove('show');
+            results.classList.remove('show');
+            
+            // Get form data
+            const nisn = document.getElementById('nisn').value.trim();
+            const npsn = document.getElementById('npsn').value.trim();
+            
+            // Validate input
+            if (!nisn || !npsn) {
+                showError('Mohon isi NISN dan NPSN');
+                return;
+            }
+            
+            // Show loading
+            loading.classList.add('show');
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `nisn=${encodeURIComponent(nisn)}&npsn=${encodeURIComponent(npsn)}`
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Terjadi kesalahan');
+                }
+                
+                // Display results
+                displayResults(data);
+                
+            } catch (err) {
+                showError(err.message || 'Terjadi kesalahan saat mengambil data');
+            } finally {
+                loading.classList.remove('show');
+                submitBtn.disabled = false;
+            }
+        });
+        
+        function displayResults(data) {
+            document.getElementById('nama').textContent = data.nama || 'N/A';
+            document.getElementById('keterangan').textContent = data.keterangan || 'N/A';
+            
+            const statusElement = document.getElementById('status');
+            const status = data.status;
+            statusElement.textContent = `Status ${status}`;
+            
+            // Remove all status classes
+            statusElement.className = 'status-badge';
+            
+            // Add appropriate status class
+            if (status === 0 || status === '0') {
+                statusElement.classList.add('status-0');
+            } else if (status === 1 || status === '1') {
+                statusElement.classList.add('status-1');
+            } else if (status === 2 || status === '2') {
+                statusElement.classList.add('status-2');
+            }
+            
+            // Display eligibility with color coding based on text content
+            const eligibilityElement = document.getElementById('eligibility');
+            eligibilityElement.textContent = data.eligibility || 'N/A';
+            
+            // Add color based on eligibility text
+            if (data.eligibility && data.eligibility.includes('Dapat Mengikuti')) {
+                eligibilityElement.style.color = '#059669'; // Green for eligible
+            } else if (data.eligibility && data.eligibility.includes('Tidak Dapat')) {
+                eligibilityElement.style.color = '#dc2626'; // Red for not eligible
+            } else {
+                eligibilityElement.style.color = '#333'; // Default
+            }
+            
+            results.classList.add('show');
+        }
+        
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('show');
+        }
+    </script>
+</body>
+</html>
