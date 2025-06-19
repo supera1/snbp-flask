@@ -10,18 +10,29 @@ app = Flask(__name__)
 # Configuration
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 API_URL = "https://api-snbp.snpmb.id/snbp-check"
-SERVICE_ACCOUNT_FILE = "service-account.json"
+SERVICE_ACCOUNT_FILE = "service-account.json"  # For local development only
 
 def get_snbp_data(nisn, npsn):
     """
     Fetch SNBP data from the API using service account authentication
     """
     try:
-        # Create credentials from service account
-        creds = service_account.IDTokenCredentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE,
-            target_audience=API_URL,
-        )
+        # Try to get service account from environment variable first
+        service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT')
+        
+        if service_account_json:
+            # Use environment variable
+            service_account_info = json.loads(service_account_json)
+            creds = service_account.IDTokenCredentials.from_service_account_info(
+                service_account_info,
+                target_audience=API_URL,
+            )
+        else:
+            # Fallback to file (for local development)
+            creds = service_account.IDTokenCredentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE,
+                target_audience=API_URL,
+            )
         
         # Refresh the credentials to get a valid token
         auth_request = google.auth.transport.requests.Request()
@@ -38,6 +49,8 @@ def get_snbp_data(nisn, npsn):
     
     except FileNotFoundError:
         return {"error": "Service account file not found. Please ensure 'service-account.json' is in the application directory."}
+    except json.JSONDecodeError:
+        return {"error": "Invalid service account JSON in environment variable"}
     except requests.exceptions.RequestException as e:
         return {"error": f"API request failed: {str(e)}"}
     except Exception as e:
